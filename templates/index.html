@@ -1,0 +1,653 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Iris Flower Classification</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fb;
+            margin: 0;
+            padding: 30px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #2563eb;
+            font-size: 32px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .card {
+            background-color: white;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .card h2 {
+            color: #2563eb;
+            margin-top: 0;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 20px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1d4ed8;
+        }
+
+        .result {
+            background-color: #ecfdf5;
+            border-left: 5px solid #10b981;
+            padding: 20px;
+            margin-top: 25px;
+            border-radius: 6px;
+        }
+
+        .result h2 {
+            color: #047857;
+        }
+
+        .error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+
+        .accuracy {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .table th,
+        .table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .table th {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .graph {
+            width: 100%;
+            max-width: 800px;
+            display: block;
+            margin: 20px auto;
+            border-radius: 8px;
+        }
+
+        .graph-description {
+            line-height: 1.7;
+            color: #555;
+        }
+
+        .section-divider {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 30px 0;
+        }
+
+        .probability-bar {
+            background-color: #e5e7eb;
+            height: 22px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+
+        .probability-fill {
+            background-color: #2563eb;
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+
+            body {
+                padding: 15px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 25px;
+            }
+
+            .card {
+                padding: 18px;
+            }
+
+            .table th,
+            .table td {
+                padding: 8px;
+                font-size: 13px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+
+        <h1>Iris Flower Classification</h1>
+
+        <p>
+            Machine Learning Classification Using Logistic Regression
+        </p>
+
+        <p>
+            An interactive web application for predicting Iris flower species
+            based on their physical measurements.
+        </p>
+
+    </div>
+
+
+    <!-- MODEL PERFORMANCE -->
+    <div class="card">
+
+        <h2>Model Performance</h2>
+
+        <p>Logistic Regression Model Accuracy:</p>
+
+        <div class="accuracy">
+            {{ accuracy }}%
+        </div>
+
+        <p>
+            The model was trained using the Iris dataset
+            and evaluated using a separate testing dataset.
+        </p>
+
+    </div>
+
+
+    <!-- PREDICTION FORM -->
+    <div class="card">
+
+        <h2>Predict Iris Species</h2>
+
+        <p>
+            Enter the measurements of an Iris flower
+            to predict its species.
+        </p>
+
+        <form action="/predict" method="POST">
+
+            <div class="form-grid">
+
+                <div>
+
+                    <label for="sepal_length">
+                        Sepal Length (cm)
+                    </label>
+
+                    <input
+                        type="number"
+                        step="any"
+                        name="sepal_length"
+                        id="sepal_length"
+                        placeholder="e.g. 5.1"
+                        value="{{ input_values.get('sepal_length', '') if input_values else '' }}"
+                        required
+                    >
+
+                </div>
+
+
+                <div>
+
+                    <label for="sepal_width">
+                        Sepal Width (cm)
+                    </label>
+
+                    <input
+                        type="number"
+                        step="any"
+                        name="sepal_width"
+                        id="sepal_width"
+                        placeholder="e.g. 3.5"
+                        value="{{ input_values.get('sepal_width', '') if input_values else '' }}"
+                        required
+                    >
+
+                </div>
+
+
+                <div>
+
+                    <label for="petal_length">
+                        Petal Length (cm)
+                    </label>
+
+                    <input
+                        type="number"
+                        step="any"
+                        name="petal_length"
+                        id="petal_length"
+                        placeholder="e.g. 1.4"
+                        value="{{ input_values.get('petal_length', '') if input_values else '' }}"
+                        required
+                    >
+
+                </div>
+
+
+                <div>
+
+                    <label for="petal_width">
+                        Petal Width (cm)
+                    </label>
+
+                    <input
+                        type="number"
+                        step="any"
+                        name="petal_width"
+                        id="petal_width"
+                        placeholder="e.g. 0.2"
+                        value="{{ input_values.get('petal_width', '') if input_values else '' }}"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+            <button type="submit">
+                Predict Species
+            </button>
+
+        </form>
+
+
+        <!-- PREDICTION RESULT -->
+        {% if prediction %}
+
+        <div class="result">
+
+            <h2>Prediction Result</h2>
+
+            <p>
+                Predicted Iris Species:
+            </p>
+
+            <h2>
+                {{ prediction|capitalize }}
+            </h2>
+
+            <h3>Prediction Probabilities</h3>
+
+            {% for i in range(species|length) %}
+
+                <p>
+                    <strong>
+                        {{ species[i]|capitalize }}
+                    </strong>
+
+                    :
+                    {{ "%.2f"|format(probabilities[i] * 100) }}%
+                </p>
+
+                <div class="probability-bar">
+
+                    <div
+                        class="probability-fill"
+                        style="width: {{ probabilities[i] * 100 }}%;">
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- ERROR MESSAGE -->
+        {% if error %}
+
+        <div class="error">
+
+            <strong>Error:</strong>
+            {{ error }}
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- CLASSIFICATION REPORT -->
+    <div class="card">
+
+        <h2>Classification Report</h2>
+
+        <p>
+            The classification report presents the precision,
+            recall and F1-score achieved by the model for
+            each Iris species.
+        </p>
+
+        <table class="table">
+
+            <thead>
+
+                <tr>
+                    <th>Species</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1-Score</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for name in species %}
+
+                <tr>
+
+                    <td>
+                        {{ name|capitalize }}
+                    </td>
+
+                    <td>
+                        {{ "%.2f"|format(report[name]["precision"]) }}
+                    </td>
+
+                    <td>
+                        {{ "%.2f"|format(report[name]["recall"]) }}
+                    </td>
+
+                    <td>
+                        {{ "%.2f"|format(report[name]["f1-score"]) }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- EXPLORATORY DATA ANALYSIS -->
+    <div class="card">
+
+        <h2>Exploratory Data Analysis</h2>
+
+        <p class="graph-description">
+
+            The following visualizations were generated
+            during the exploratory data analysis of the
+            Iris dataset. They provide insights into the
+            distribution of the dataset and the relationships
+            among the numerical features.
+
+        </p>
+
+
+        <!-- GRAPH 1 -->
+        <h3>1. Distribution of Iris Species</h3>
+
+        <img
+            src="/species_distribution.png"
+            alt="Distribution of Iris Species"
+            class="graph"
+        >
+
+        <p class="graph-description">
+
+            The bar chart shows the distribution of the
+            three Iris species in the dataset. Each species
+            contains 50 observations, indicating that the
+            dataset is balanced.
+
+        </p>
+
+
+        <hr class="section-divider">
+
+
+        <!-- GRAPH 2 -->
+        <h3>2. Distribution of Numerical Features</h3>
+
+        <img
+            src="/feature_histograms.png"
+            alt="Histograms of Iris Numerical Features"
+            class="graph"
+        >
+
+        <p class="graph-description">
+
+            The histograms illustrate the distributions of
+            sepal length, sepal width, petal length and
+            petal width. They help identify the spread,
+            frequency and patterns of the measurements.
+
+        </p>
+
+
+        <hr class="section-divider">
+
+
+        <!-- GRAPH 3 -->
+        <h3>3. Petal Length vs Petal Width</h3>
+
+        <img
+            src="/petal_scatter.png"
+            alt="Petal Length versus Petal Width Scatter Plot"
+            class="graph"
+        >
+
+        <p class="graph-description">
+
+            The scatter plot shows the relationship between
+            petal length and petal width across the three
+            Iris species. Setosa is clearly separated from
+            the other species, while Versicolor and
+            Virginica show some overlap.
+
+        </p>
+
+
+        <hr class="section-divider">
+
+
+        <!-- GRAPH 4 -->
+        <h3>4. Correlation Heatmap</h3>
+
+        <img
+            src="/correlation_heatmap.png"
+            alt="Correlation Heatmap of Iris Features"
+            class="graph"
+        >
+
+        <p class="graph-description">
+
+            The correlation heatmap illustrates the
+            relationships among the numerical features.
+            Petal length and petal width demonstrate a
+            strong positive correlation, indicating that
+            flowers with longer petals tend to have wider
+            petals.
+
+        </p>
+
+
+        <hr class="section-divider">
+
+
+        <!-- GRAPH 5 -->
+        <h3>5. Confusion Matrix</h3>
+
+        <img
+            src="/confusion_matrix.png"
+            alt="Confusion Matrix of Logistic Regression Model"
+            class="graph"
+        >
+
+        <p class="graph-description">
+
+            The confusion matrix compares the actual
+            species with the species predicted by the
+            Logistic Regression model. The diagonal
+            represents correctly classified observations,
+            while the other cells represent
+            misclassifications.
+
+        </p>
+
+    </div>
+
+
+    <!-- ABOUT THE DATASET -->
+    <div class="card">
+
+        <h2>About the Iris Dataset</h2>
+
+        <p>
+
+            The Iris dataset is a well-known dataset used
+            in machine learning and statistical analysis.
+            It contains measurements of three species of
+            Iris flowers: Setosa, Versicolor and Virginica.
+
+        </p>
+
+        <p>
+
+            The dataset contains 150 observations and
+            four numerical features:
+
+        </p>
+
+        <ul>
+
+            <li>Sepal Length</li>
+
+            <li>Sepal Width</li>
+
+            <li>Petal Length</li>
+
+            <li>Petal Width</li>
+
+        </ul>
+
+        <p>
+
+            The purpose of this application is to use
+            these measurements to classify flowers into
+            their respective species using a machine
+            learning model.
+
+        </p>
+
+    </div>
+
+
+    <!-- FOOTER -->
+    <div class="footer">
+
+        <p>
+            Iris Classification Project |
+            Machine Learning |
+            Logistic Regression
+        </p>
+
+    </div>
+
+</div>
+
+</body>
+</html>
